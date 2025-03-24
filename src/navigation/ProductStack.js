@@ -7,9 +7,33 @@ const Stack = createStackNavigator();
 
 const ProductStack = () => {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="productList" component={ProductPage} options={{ title: 'Danh Sách Sản Phẩm' }} />
-      <Stack.Screen name="productdetail" component={ProductDetail} options={{ title: 'Chi Tiết Sản Phẩm' }} />
+    <Stack.Navigator 
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#007AFF',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen 
+        name="productList" 
+        component={ProductPage} 
+        options={{ 
+          title: 'Danh Sách Sản Phẩm',
+          headerShown: true
+        }} 
+      />
+      <Stack.Screen 
+        name="productdetail" 
+        component={ProductDetail} 
+        options={{ 
+          title: 'Chi Tiết Sản Phẩm',
+          headerShown: true
+        }} 
+      />
     </Stack.Navigator>
   );
 };

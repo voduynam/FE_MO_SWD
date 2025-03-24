@@ -8,10 +8,33 @@ const Stack = createStackNavigator();
 
 const ScreensStack = () => {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="listUser" component={ListUserPage} options={{ title: 'Danh sách sản phẩm' }} />
-      <Stack.Screen name="userdetail" component={UserDetail} options={{ title: 'Chi tiết sản phẩm' }} />
-      
+    <Stack.Navigator 
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#007AFF',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen 
+        name="listUser" 
+        component={ListUserPage} 
+        options={{ 
+          title: 'Danh Sách Người Dùng',
+          headerShown: true
+        }} 
+      />
+      <Stack.Screen 
+        name="userdetail" 
+        component={UserDetail} 
+        options={{ 
+          title: 'Chi Tiết Người Dùng',
+          headerShown: true
+        }} 
+      />
     </Stack.Navigator>
   );
 };

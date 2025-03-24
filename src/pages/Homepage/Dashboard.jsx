@@ -1,57 +1,20 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
-import React, { useState } from 'react';
+import React from 'react';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { Card } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSelectedFilter } from '../../redux/features/dashboardSlice';
 
 const screenWidth = Dimensions.get('window').width;
 
 const Dashboard = () => {
-  const [selectedFilter, setSelectedFilter] = useState('day');
-  
-  // Dữ liệu doanh thu
-  const revenueData = {
-    day: {
-      labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-      data: [5000, 6000, 5500, 7000, 8000, 7500, 9000],
-    },
-    week: {
-      labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
-      data: [30000, 35000, 32000, 40000],
-    },
-    month: {
-      labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4'],
-      data: [120000, 150000, 140000, 160000],
-    },
-    year: {
-      labels: ['2021', '2022', '2023', '2024'],
-      data: [1500000, 1700000, 1600000, 1800000],
-    },
-  };
-
-  // Dữ liệu lợi nhuận (giả định lợi nhuận là 25% doanh thu)
-  const profitData = {
-    day: {
-      labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-      data: revenueData.day.data.map(value => value * 0.25),
-    },
-    week: {
-      labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
-      data: revenueData.week.data.map(value => value * 0.25),
-    },
-    month: {
-      labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4'],
-      data: revenueData.month.data.map(value => value * 0.25),
-    },
-    year: {
-      labels: ['2021', '2022', '2023', '2024'],
-      data: revenueData.year.data.map(value => value * 0.25),
-    },
-  };
+  const dispatch = useDispatch();
+  const { revenueData, selectedFilter } = useSelector((state) => state.dashboard);
 
   // Tính tổng doanh thu và lợi nhuận theo filter
   const totalRevenue = revenueData[selectedFilter].data.reduce((a, b) => a + b, 0);
-  const totalProfit = profitData[selectedFilter].data.reduce((a, b) => a + b, 0);
+  const totalProfit = totalRevenue * 0.25; // Giả định lợi nhuận là 25% doanh thu
 
   return (
     <ScrollView style={styles.container}>
@@ -62,7 +25,7 @@ const Dashboard = () => {
             <TouchableOpacity
               key={item}
               style={[styles.button, selectedFilter === item && styles.activeButton]}
-              onPress={() => setSelectedFilter(item)}
+              onPress={() => dispatch(setSelectedFilter(item))}
             >
               <Text style={[styles.buttonText, selectedFilter === item && styles.activeText]}>
                 {item === 'day' ? 'NGÀY' : item === 'week' ? 'TUẦN' : item === 'month' ? 'THÁNG' : 'NĂM'}
@@ -72,7 +35,7 @@ const Dashboard = () => {
         </View>
       </View>
 
-      {/* KPI Cards - chỉ hiển thị doanh thu và lợi nhuận */}
+      {/* KPI Cards */}
       <View style={styles.kpiContainer}>
         <Card style={styles.kpiCardWide}>
           <Card.Content>
@@ -123,8 +86,8 @@ const Dashboard = () => {
         <Card.Content>
           <LineChart
             data={{
-              labels: profitData[selectedFilter].labels,
-              datasets: [{ data: profitData[selectedFilter].data }],
+              labels: revenueData[selectedFilter].labels,
+              datasets: [{ data: revenueData[selectedFilter].data.map(value => value * 0.25) }],
             }}
             width={screenWidth - 40}
             height={220}
@@ -160,7 +123,7 @@ const Dashboard = () => {
               labels: revenueData[selectedFilter].labels,
               datasets: [
                 { data: revenueData[selectedFilter].data, color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})` },
-                { data: profitData[selectedFilter].data, color: (opacity = 1) => `rgba(75, 192, 192, ${opacity})` }
+                { data: revenueData[selectedFilter].data.map(value => value * 0.25), color: (opacity = 1) => `rgba(75, 192, 192, ${opacity})` }
               ],
               legend: ['Doanh thu', 'Lợi nhuận']
             }}

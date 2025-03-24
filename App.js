@@ -1,13 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
-import TabNavigator from './src/navigation/TabNavigator';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider } from 'react-redux';
+import { NavigationContainer } from '@react-navigation/native';
+import store from './src/redux/store';
+import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <TabNavigator />
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <PaperProvider>
+        <NavigationContainer>
+          <View style={styles.container}>
+            <RootNavigator />
+            <StatusBar style="auto" />
+          </View>
+        </NavigationContainer>
+      </PaperProvider>
+    </Provider>
   );
 }
 
