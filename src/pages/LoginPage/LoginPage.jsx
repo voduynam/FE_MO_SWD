@@ -13,8 +13,23 @@ const LoginPage = () => {
   const { loading, error } = useSelector((state) => state.auth);
 
   const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+    // Validate username
+    if (!username) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên đăng nhập');
+      return;
+    }
+    if (username.length < 3) {
+      Alert.alert('Lỗi', 'Tên đăng nhập phải có ít nhất 3 ký tự');
+      return;
+    }
+
+    // Validate password
+    if (!password) {
+      Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
@@ -61,13 +76,7 @@ const LoginPage = () => {
         Đăng nhập
       </Button>
       
-      <Button
-        mode="text"
-        onPress={() => navigation.navigate('Register')}
-        style={styles.linkButton}
-      >
-        Chưa có tài khoản? Đăng ký
-      </Button>
+     
     </View>
   );
 };
@@ -91,9 +100,11 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 10,
     paddingVertical: 8,
+    
   },
   linkButton: {
     marginTop: 15,
+    color: 'red',
   },
 });
 

@@ -1,113 +1,143 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../redux/features/authSlice';
 
 const ProfilePage = () => {
   const [isChangePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
   const handleChangePassword = async () => {
+    // Validate username
+    if (!username) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên đăng nhập');
+      return;
+    }
+    if (username.length < 3) {
+      Alert.alert('Lỗi', 'Tên đăng nhập phải có ít nhất 3 ký tự');
+      return;
+    }
+
+    // Validate new password
+    if (!newPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu mới');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 6 ký tự');
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      Alert.alert('Lỗi', 'Mật khẩu mới phải chứa ít nhất 1 chữ hoa');
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      Alert.alert('Lỗi', 'Mật khẩu mới phải chứa ít nhất 1 chữ thường');
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      Alert.alert('Lỗi', 'Mật khẩu mới phải chứa ít nhất 1 chữ số');
+      return;
+    }
+
+    // Validate confirm password
+    if (!confirmPassword) {
+      Alert.alert('Lỗi', 'Vui lòng xác nhận mật khẩu mới');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       Alert.alert('Lỗi', 'Mật khẩu mới và xác nhận mật khẩu không khớp!');
       return;
     }
 
     try {
-      // TODO: Implement API call to change password
+      const requestBody = {
+        username: username,
+        password: newPassword,
+        confirmPassword: confirmPassword
+      };
+      
+      console.log('Request body:', requestBody);
+
+      const response = await fetch('https://phamdangtuc-001-site1.ntempurl.com/api/users/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
+      if (!response.ok) {
+        if (responseData.errors) {
+          // Nếu có lỗi validation từ server
+          const errorMessages = Object.values(responseData.errors).flat();
+          throw new Error(errorMessages.join('\n'));
+        }
+        throw new Error(responseData.message || 'Không thể thay đổi mật khẩu');
+      }
+
       Alert.alert('Thành công', 'Mật khẩu đã được thay đổi!');
       setChangePasswordModalVisible(false);
-      setCurrentPassword('');
+      setUsername('');
       setNewPassword('');
       setConfirmPassword('');
+      
+      // Đăng xuất sau khi đổi mật khẩu thành công
+      dispatch(logout());
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể thay đổi mật khẩu. Vui lòng thử lại!');
+      Alert.alert('Lỗi', error.message || 'Không thể thay đổi mật khẩu. Vui lòng thử lại!');
     }
   };
 
-  const InfoItem = ({ icon, label, value }) => (
-    <View style={styles.infoItem}>
-      <View style={styles.infoIconContainer}>
-        <Ionicons name={icon} size={24} color="#007AFF" />
-      </View>
-      <View style={styles.infoContent}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
-      </View>
-    </View>
-  );
-
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          {user?.avatar ? (
-            <Image source={{ uri: user.avatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={60} color="#007AFF" />
-            </View>
-          )}
-        </View>
-        <Text style={styles.userName}>{user?.fullName}</Text>
-        <Text style={styles.userRole}>
-          {user?.roleId === 1 ? 'Admin' : user?.roleId === 2 ? 'Staff' : 'Member'}
-        </Text>
-      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => setChangePasswordModalVisible(true)}
+        >
+          <Ionicons name="lock-closed-outline" size={24} color="#007AFF" />
+          <Text style={styles.buttonText}>Đổi mật khẩu</Text>
+        </TouchableOpacity>
 
-      <View style={styles.infoContainer}>
-        <InfoItem
-          icon="person-outline"
-          label="Tên đăng nhập"
-          value={user?.username}
-        />
-        <InfoItem
-          icon="mail-outline"
-          label="Email"
-          value={user?.email}
-        />
-        <InfoItem
-          icon="call-outline"
-          label="Số điện thoại"
-          value={user?.phone}
-        />
-        <InfoItem
-          icon="location-outline"
-          label="Địa chỉ"
-          value={user?.address}
-        />
-        <InfoItem
-          icon="calendar-outline"
-          label="Ngày sinh"
-          value={formatDate(user?.dateOfBirth)}
-        />
-        <InfoItem
-          icon="male-outline"
-          label="Giới tính"
-          value={user?.gender ? 'Nam' : 'Nữ'}
-        />
+        <TouchableOpacity 
+          style={[styles.button, styles.logoutButton]}
+          onPress={() => {
+            Alert.alert(
+              'Xác nhận',
+              'Bạn có chắc chắn muốn đăng xuất?',
+              [
+                {
+                  text: 'Hủy',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Đăng xuất',
+                  onPress: () => {
+                    dispatch(logout());
+                  },
+                  style: 'destructive',
+                },
+              ],
+              { cancelable: true }
+            );
+          }}
+        >
+          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+          <Text style={[styles.buttonText, styles.logoutText]}>Đăng xuất</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity 
-        style={styles.changePasswordButton}
-        onPress={() => setChangePasswordModalVisible(true)}
-      >
-        <Ionicons name="lock-closed-outline" size={24} color="#007AFF" />
-        <Text style={styles.changePasswordText}>Đổi mật khẩu</Text>
-      </TouchableOpacity>
 
       <Modal
         animationType="slide"
@@ -121,10 +151,10 @@ const ProfilePage = () => {
             
             <TextInput
               style={styles.input}
-              placeholder="Mật khẩu hiện tại"
-              secureTextEntry
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
+              placeholder="Tên đăng nhập"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
             
             <TextInput
@@ -170,86 +200,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e1e1',
+  buttonContainer: {
+    padding: 16,
+    marginTop: 20,
   },
-  avatarContainer: {
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
     marginBottom: 16,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#e1e1e1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  userRole: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  infoContainer: {
-    padding: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  infoIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f8ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  changePasswordButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 16,
-    margin: 16,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
@@ -260,11 +220,17 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  changePasswordText: {
+  buttonText: {
     fontSize: 16,
     color: '#007AFF',
     marginLeft: 12,
     fontWeight: '500',
+  },
+  logoutButton: {
+    marginTop: 8,
+  },
+  logoutText: {
+    color: '#FF3B30',
   },
   modalContainer: {
     flex: 1,

@@ -5,8 +5,15 @@ import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import store from './src/redux/store';
 import RootNavigator from './src/navigation/RootNavigator';
+import { useEffect } from 'react';
+import { checkAuthState } from './src/redux/features/authSlice';
 
 export default function App() {
+  useEffect(() => {
+    // Check auth state when app starts
+    store.dispatch(checkAuthState());
+  }, []);
+
   return (
     <Provider store={store}>
       <PaperProvider>

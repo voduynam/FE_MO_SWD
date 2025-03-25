@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from '../../redux/features/productSlice';
+import { Ionicons } from '@expo/vector-icons';
 
 const ProductPage = () => {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector((state) => state.products);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     console.log('ProductPage mounted, fetching products...');
@@ -19,6 +21,11 @@ const ProductPage = () => {
   // Đảm bảo products luôn là array
   const safeProducts = Array.isArray(products) ? products : [];
   console.log('Safe products array:', safeProducts);
+
+  // Lọc sản phẩm theo tên
+  const filteredProducts = safeProducts.filter(product => 
+    product.productName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) {
     console.log('Loading products...');
@@ -58,6 +65,7 @@ const ProductPage = () => {
           <Paragraph>Số lượng: {item.stockInStorage || 0}</Paragraph>
           <Paragraph>Mô tả: {item.description || 'Không có mô tả'}</Paragraph>
           <Paragraph>Mã sản phẩm: {item.productId || 'N/A'}</Paragraph>
+          <Paragraph>Loại sản phẩm: {item.isDeleted ?  "❌Ngừng hoạt động" : " ✅Đang hoạt động"} </Paragraph>
         </Card.Content>
       </Card>
     );
@@ -70,14 +78,31 @@ const ProductPage = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm sản phẩm..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        <View style={styles.productCount}>
+          <Text style={styles.productCountText}>
+            Tổng số sản phẩm: {filteredProducts.length}
+          </Text>
+        </View>
+      </View>
+
       <FlatList
-        data={safeProducts}
+        data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={keyExtractor}
         contentContainerStyle={styles.productList}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Không có sản phẩm nào</Text>
+            <Text style={styles.emptyText}>Không tìm thấy sản phẩm nào</Text>
           </View>
         )}
       />
@@ -85,12 +110,43 @@ const ProductPage = () => {
   );
 };
 
-export default ProductPage;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  productCount: {
+    backgroundColor: '#e8f4ff',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  productCountText: {
+    color: '#00cc00',
+    fontSize: 14,
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -126,4 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-}); 
+});
+
+export default ProductPage; 
